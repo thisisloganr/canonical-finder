@@ -1,10 +1,10 @@
 Canonical Finder: 
 
-Input a list of URL homepages in column a
+Input a list of websites in column a
 
-Outputs a data frame with the status codes for each version of a URL (http://, https://, http://www, https://www)
+Outputs a dataframe and .csv with the status codes for each version of a URL (http://, https://, http://www, https://www)
 
-You're also given a status for the domain, returning "Good" if only one out of four return 200, and pertinent statues when either 0, 2, 3, or 4 return 200
+You're also given a status for the domain, returning "Good" if only one out of four return 200, and pertinent statuses when either 0, 2, 3, or 4 return 200
 
 Export options include:
 
