@@ -1,0 +1,129 @@
+import pandas as pd
+import requests
+import os
+from datetime import datetime
+from google.colab import files, drive
+
+# Set start time
+startTime = datetime.now()
+
+# File request
+print("File Input or Google Sheet? (f/g):")
+ft = input()
+if ft == "f":
+  fp = files.upload()
+  res = list(fp.keys())[0] 
+  fp = str(res)
+elif ft == "g":
+  print("\n" + "Enter Google Sheet URL:")
+  fp = input()
+  fp = fp.replace("edit?pli=1#gid","export?format=csv&gid").replace("edit#gid","export?format=csv&gid")
+else:
+  print("Invalid File Input")
+
+# Create dataFrame dependent on file type
+if "xlsx" in fp:
+    df = pd.read_excel(fp)
+    fty = "xlsx"
+elif "docs.google" in fp:
+    df = pd.read_csv(fp)
+    fty = "sheet"
+elif "csv" in fp:
+    df = pd.read_csv(fp)
+    fty = "csv"
+else:
+    print("Invalid File Type")
+    
+# Clean website homepage
+def clean(x):
+    return (x.replace("https://","").replace("http://","").replace("www.","").replace(".com/",".com")).lower()
+df['Clean'] = df[list(df.columns)[0]].apply(clean)
+
+# Create list with each protocol and www combo
+def status(x):
+    ver = ['http://' + x,'https://' + x,'http://www.' + x,'https://www.' + x]
+    list = []
+    for i in range(len(ver)):
+        x = ver[i]
+        try:
+            z = requests.head(x).status_code
+        except:
+            pass
+        list.append(x + ": " + str(z))
+    return list
+df['Versions and Status'] = df['Clean'].apply(status)
+
+# Display the URLs that return a 200
+def canon(x):
+    ver = ['http://' + x,'https://' + x,'http://www.' + x,'https://www.' + x]
+    list = []
+    for i in range(len(ver)):
+        x = ver[i]
+        try:
+            z = requests.head(x).status_code
+        except:
+            pass
+        if z == 200:
+            list.append(x)
+        else:
+            pass 
+    return list
+df['Canonical'] = df['Clean'].apply(canon)
+
+# Count the length of the canonical list
+def count(x):
+    try:
+        return len(x)
+    except:
+        return 0
+df['Count'] = df['Canonical'].apply(count)
+
+# Set status based on length of list, 1 = Good
+def state(x):
+    if x == 1:
+        return "Good"
+    elif x == 9:
+        return "Timed out"
+    elif x > 1:
+        return "Multiple Resolving URLs"
+    elif x == 0:
+        return "No Canonical URL"
+    else:
+        pass
+df['Status'] = df['Count'].apply(state)
+
+
+df = df.drop(columns=['Clean','Count'])
+
+df = df.sort_values(by=['Status'], ascending = False)
+
+print(df)
+
+# How long did the script take to run?
+print("\n" + "Time to Run: " + str(datetime.now() - startTime))
+
+# Writes new .csv file
+print("\n" + "Export? (y/n)")
+exp = input()
+if exp == "y":
+    if fty == "xlsx":
+        fp = fp.replace(".xlsx","").replace(".xlsx","")
+        fp = fp + " - Protocol + Sub Checked.xlsx"
+        df.to_excel(fp)
+        files.download(fp)
+    elif fty == "csv":
+        fp = fp.replace(".csv","").replace(".xlsx","")
+        fp = fp + " - Protocol + Sub Checked.xlsx"
+        df.to_excel(fp)
+        files.download(fp)
+    elif fty == "sheet":
+        print("\n" + "Enter File Name:")
+        fn = input()
+        path = fn + " - Protocol + Sub Checked.xlsx"
+        df.to_excel(path)
+        files.download(path)
+        pass
+    else:
+        pass
+else:
+    pass
