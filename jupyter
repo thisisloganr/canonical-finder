@@ -112,7 +112,6 @@ if exp == "y":
     else:
         pass
 else:
-    print("Okay, thanks")
     pass
 
 # https://docs.google.com/spreadsheets/d/1Pp6lv-jO-Yo_3EZOgkXWdmdaTDj_BIZP2RmUCqWqre0/edit#gid=0
